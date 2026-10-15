@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shortly – URL Shortener</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f5f6fa;--card:#fff;--text:#14161f;--muted:#6b7084;--line:#e3e5ee;--accent:#4f46e5;--accent-t:#fff;--ok:#12805c;--bad:#c2301f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1117;--card:#181b25;--text:#eceef6;--muted:#9096ad;--line:#2a2e3c;--accent:#818cf8;--accent-t:#0f1117;--ok:#4ade9c;--bad:#ff7b6b}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1117;--card:#181b25;--text:#eceef6;--muted:#9096ad;--line:#2a2e3c;--accent:#818cf8;--accent-t:#0f1117;--ok:#4ade9c;--bad:#ff7b6b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.6rem;margin:0 0 4px}h2{font-size:1.05rem;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px}
+label{display:block;font-size:.85rem;color:var(--muted);margin:12px 0 4px}
+input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text);font:inherit}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:flex;gap:8px;align-items:center}.row>input{flex:1;min-width:0}
+button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px}
+button.primary{background:var(--accent);color:var(--accent-t);border-color:var(--accent);font-weight:600;width:100%;margin-top:16px;padding:12px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.hint{font-size:.85rem;min-height:1.3em;margin-top:5px;color:var(--muted)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.prefix{color:var(--muted);font-size:.85rem;word-break:break-all;margin-top:4px}
+.result{display:none;border:1px dashed var(--accent);border-radius:10px;padding:12px;margin-top:14px}
+.item{display:flex;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.info{flex:1;min-width:0}
+.alias{font-weight:600;color:var(--accent)}
+.dest{color:var(--muted);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{font-size:.78rem;color:var(--muted)}
+.acts{display:flex;gap:6px}.acts button{padding:6px 10px;font-size:.85rem}
+.empty{color:var(--muted);text-align:center;padding:16px 0}
+#redirect{display:none;text-align:center}
+</style>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4f46e5">
+</head>
+<body>
+<main>
+  <div id="redirect" class="card"><h2 id="rtitle">Redirecting…</h2><p id="rmsg" class="sub"></p></div>
+  <div id="app">
+    <h1>🔗 Shortly</h1>
+    <p class="sub">Free short links. No sign-in. Links are saved automatically.</p>
+    <div id="setup" class="card" style="display:none"><h2>Setup needed</h2><p class="sub">Open <code>config.js</code> and paste your Worker URL. See the README.</p></div>
+
+    <div class="card">
+      <h2>Create a short link</h2>
+      <label for="url">Long URL</label>
+      <input id="url" type="url" placeholder="https://example.com/some/very/long/page" autocomplete="off">
+      <label for="alias">Custom alias <span style="opacity:.7">(optional – leave blank to auto-generate)</span></label>
+      <input id="alias" placeholder="my-link" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div id="ahint" class="hint"></div>
+      <label for="base">Short-link base (this site's address)</label>
+      <input id="base" autocomplete="off">
+      <button id="create" class="primary">Shorten</button>
+      <div id="msg" class="hint"></div>
+      <div id="result" class="result">
+        <div class="meta">Your short link</div>
+        <div class="row"><input id="rlink" readonly><button id="rcopy">Copy</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>All links <span id="count" class="meta"></span></h2>
+      <input id="search" placeholder="Search aliases or URLs…" style="margin-bottom:6px">
+      <label style="display:flex;gap:8px;align-items:center;margin:4px 0 8px"><input id="only" type="checkbox" style="width:auto"> Show only my links</label>
+      <div class="row" style="margin-bottom:6px"><button id="kcopy">Copy my key</button><button id="kuse">Use a saved key</button></div>
+      <div class="hint">Your key (stored in this browser) proves which links are yours. Copy it somewhere safe to keep editing them on another device.</div>
+      <div id="list"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+</main>
+<script src="config.js"></script>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var KEY='shortly-key',RE=/^[a-z0-9][a-z0-9_-]{2,31}$/,RESERVED=['admin','api','new','links'];
+  var API=((window.SHORTLY_API||'')+'').replace(/\/$/,''),links={},mine={},me='',secret='',editing=null,draft={},onlyMine=false,timer=null;
+  function nb(u){u=(u||'').split('#')[0].split('?')[0].replace(/index\.html$/,'');return u.endsWith('/')?u:u+'/'}
+  var base=nb(location.href);
+  try{var sb=localStorage.getItem('shortly-base');if(sb)base=sb}catch(e){}
+  $('base').value=base;
+  $('base').addEventListener('change',function(){try{localStorage.setItem('shortly-base',$('base').value)}catch(e){}});
+  function linkFor(a){return nb($('base').value)+a}
+  function validUrl(u){try{var x=new URL(u);return x.protocol==='http:'||x.protocol==='https:'}catch(e){return false}}
+  function setHint(el,t,cls){el.textContent=t;el.className='hint '+(cls||'')}
+  function copy(t,btn){
+    var done=function(){var o=btn.textContent;btn.textContent='Copied!';setTimeout(function(){btn.textContent=o},1200)};
+    try{navigator.clipboard.writeText(t).then(done,fb)}catch(e){fb()}
+    function fb(){var i=document.createElement('input');i.value=t;document.body.appendChild(i);i.select();try{document.execCommand('copy');done()}catch(e){}i.remove()}
+  }
+  async function sha(s){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+  async function call(path,body){
+    var r=await fetch(API+path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined),j={};
+    try{j=await r.json()}catch(e){}
+    if(!r.ok){var e=new Error(j.error||('Error '+r.status));e.status=r.status;throw e}return j;
+  }
+  async function load(){var j=await call('/links');links=j.links||{};try{var m=await call('/mine',{secret:secret});mine=m.links||{}}catch(e){mine={}}}
+  async function setKey(k){secret=k;try{localStorage.setItem(KEY,k)}catch(e){}me=await sha(k)}
+
+  $('alias').addEventListener('input',function(){
+    clearTimeout(timer);var a=$('alias').value.trim().toLowerCase();
+    if(!a){setHint($('ahint'),'');return}
+    if(!RE.test(a)||RESERVED.indexOf(a)>-1){setHint($('ahint'),'3–32 chars: letters, numbers, - and _ (start with a letter or number).','bad');return}
+    timer=setTimeout(async function(){
+      try{await load()}catch(e){}
+      var t=!!links[a];setHint($('ahint'),t?'✗ Already taken – try another.':'✓ Available',t?'bad':'ok');
+    },350);
+  });
+  $('create').addEventListener('click',async function(){
+    var url=$('url').value.trim(),a=$('alias').value.trim().toLowerCase(),btn=$('create');
+    $('result').style.display='none';
+    if(!validUrl(url)){setHint($('msg'),'Enter a valid http(s) URL.','bad');return}
+    if(a&&(!RE.test(a)||RESERVED.indexOf(a)>-1)){setHint($('msg'),'Fix the alias first.','bad');return}
+    btn.disabled=true;setHint($('msg'),'Saving…');
+    try{
+      var j=await call('/create',{url:url,alias:a,secret:secret});
+      $('rlink').value=linkFor(j.alias);$('result').style.display='block';setHint($('msg'),'Created ✓ – works everywhere now.','ok');
+      $('url').value='';$('alias').value='';setHint($('ahint'),'');await load();render();
+    }catch(e){setHint($('msg'),e.message,'bad');if(e.status===409)setHint($('ahint'),'✗ Already taken','bad')}
+    btn.disabled=false;
+  });
+  $('rcopy').addEventListener('click',function(){copy($('rlink').value,$('rcopy'))});
+
+  function render(){
+    var q=$('search').value.toLowerCase().trim();
+    var all=Object.keys(links).map(function(k){var e=links[k];return{alias:k,url:(mine[k]||{}).url,owner:e.owner,created:e.created||0}}).sort(function(a,b){return b.created-a.created});
+    var list=all.filter(function(d){return (!onlyMine||d.owner===me)&&(!q||d.alias.indexOf(q)>-1||(d.url||'').toLowerCase().indexOf(q)>-1)});
+    $('count').textContent='('+all.length+')';
+    var box=$('list');box.textContent='';
+    if(!list.length){var e=document.createElement('div');e.className='empty';e.textContent=all.length?'No matches.':'No links yet – create the first one.';box.appendChild(e);return}
+    list.forEach(function(d){
+      var it=document.createElement('div'),own=d.owner===me;it.className='item';
+      if(own&&editing===d.alias){
+        var f=document.createElement('div');f.className='info';
+        var ai=document.createElement('input');ai.value=draft.alias;ai.maxLength=32;ai.autocapitalize='off';
+        var ui=document.createElement('input');ui.value=draft.url;ui.style.marginTop='6px';
+        var h=document.createElement('div');h.className='hint';
+        ai.oninput=function(){draft.alias=ai.value.trim().toLowerCase()};
+        ui.oninput=function(){draft.url=ui.value.trim()};
+        f.append(ai,ui,h);
+        var ac=document.createElement('div');ac.className='acts';
+        var sv=document.createElement('button');sv.textContent='Save';
+        var cn=document.createElement('button');cn.textContent='Cancel';
+        function bad(t){h.textContent=t;h.className='hint bad';sv.disabled=false}
+        cn.onclick=function(){editing=null;render()};
+        sv.onclick=async function(){
+          if(!validUrl(draft.url))return bad('Enter a valid http(s) URL.');
+          if(!RE.test(draft.alias)||RESERVED.indexOf(draft.alias)>-1)return bad('Alias: 3–32 chars, letters, numbers, - and _.');
+          sv.disabled=true;
+          try{await call('/edit',{alias:d.alias,newAlias:draft.alias,url:draft.url,secret:secret});editing=null;await load();render()}
+          catch(e){bad(e.message)}
+        };
+        ac.append(sv,cn);it.append(f,ac);box.appendChild(it);return;
+      }
+      var info=document.createElement('div');info.className='info';
+      var a=document.createElement('div');a.className='alias';a.textContent='/'+d.alias;
+      var u=document.createElement('div');u.className='dest';u.textContent=d.url||'🔒 Destination hidden';u.title=d.url||'';
+      var mt=document.createElement('div');mt.className='meta';
+      mt.textContent=new Date(d.created).toLocaleDateString()+' · '+(own?'yours':'someone else');
+      info.append(a,u,mt);
+      var acts=document.createElement('div');acts.className='acts';
+      var c=document.createElement('button');c.textContent='Copy';c.onclick=function(){copy(linkFor(d.alias),c)};
+      var o=document.createElement('button');o.textContent='Open';o.onclick=function(){window.open(d.url,'_blank','noopener')};
+      acts.append(c);if(d.url)acts.append(o);
+      if(own){
+        var ed=document.createElement('button');ed.textContent='Edit';
+        ed.onclick=function(){editing=d.alias;draft={alias:d.alias,url:d.url};render()};acts.append(ed);
+        var x=document.createElement('button');x.textContent='Delete';x.onclick=async function(){
+          if(x.dataset.sure!=='1'){x.dataset.sure='1';x.textContent='Sure?';setTimeout(function(){x.dataset.sure='';x.textContent='Delete'},2500);return}
+          try{await call('/delete',{alias:d.alias,secret:secret});await load();render()}catch(e){x.textContent='Failed'}};acts.append(x);
+      }
+      it.append(info,acts);box.appendChild(it);
+    });
+  }
+  $('search').addEventListener('input',render);
+  $('only').addEventListener('change',function(){onlyMine=$('only').checked;render()});
+  $('kcopy').onclick=function(){copy(secret,$('kcopy'))};
+  $('kuse').onclick=async function(){var k=prompt('Paste your saved key:');if(k&&k.trim().length>=16){await setKey(k.trim());render()}};
+
+  async function go(a){
+    $('app').style.display='none';$('redirect').style.display='block';
+    var w;
+    try{w=await call('/go?alias='+encodeURIComponent(a))}catch(e){
+      if(e.status===404){$('rtitle').textContent='Link not found';$('rmsg').textContent='No short link named “'+a+'” exists.'}
+      else{$('rtitle').textContent='Could not load link';$('rmsg').textContent='Please try again.'}
+      return}
+    $('rmsg').textContent='Taking you to '+w.url;
+    var n=document.createElement('a');n.href=w.url;n.textContent='Continue';n.rel='noopener';n.style.color='var(--accent)';
+    $('rmsg').appendChild(document.createElement('br'));$('rmsg').appendChild(n);
+    location.replace(w.url);
+  }
+
+  if(!API||/YOUR_/.test(API)){$('setup').style.display='block';$('list').innerHTML='';return}
+  var hash=decodeURIComponent(location.hash.replace(/^#\/?/,'')).toLowerCase();
+  var seg=decodeURIComponent(location.pathname).split('/').pop().toLowerCase();
+  var target=(seg&&!/\.html?$/.test(seg))?seg:hash;
+  if(target&&RE.test(target)){go(target);return}
+  var k=null;try{k=localStorage.getItem(KEY)}catch(e){}
+  if(!k){var a=new Uint8Array(16);crypto.getRandomValues(a);k=Array.from(a).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+  setKey(k).then(function(){return load()}).then(render).catch(function(){$('list').innerHTML='<div class="empty">Could not reach the server. Check config.js.</div>'});
+})();
+</script>
+</body>
+</html>
