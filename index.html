@@ -70,8 +70,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
       <h2>All links <span id="count" class="meta"></span></h2>
       <input id="search" placeholder="Search aliases or URLs…" style="margin-bottom:6px">
       <label style="display:flex;gap:8px;align-items:center;margin:4px 0 8px"><input id="only" type="checkbox" style="width:auto"> Show only my links</label>
-      <div class="row" style="margin-bottom:6px"><button id="kcopy">Copy my key</button><button id="kuse">Use a saved key</button></div>
-      <div class="hint">Your key (stored in this browser) proves which links are yours. Copy it somewhere safe to keep editing them on another device.</div>
+      <details style="margin-bottom:8px"><summary class="meta" style="cursor:pointer">🔑 My key (needed to edit or delete your links)</summary>
+        <div class="hint">Edit and Delete only appear on links made with your key. It is stored in this browser. Save a copy to manage your links from another device or after clearing browser data.</div>
+        <div class="row"><input id="kshow" readonly><button id="kcopy">Copy</button></div>
+        <div class="row" style="margin-top:6px"><input id="kin" placeholder="Paste a saved key here" autocomplete="off"><button id="kuse">Use key</button></div>
+        <div id="kmsg" class="hint"></div>
+      </details>
       <div id="list"><div class="empty">Loading…</div></div>
     </div>
   </div>
@@ -101,15 +105,14 @@ button:disabled{opacity:.5;cursor:not-allowed}
     try{j=await r.json()}catch(e){}
     if(!r.ok){var e=new Error(j.error||('Error '+r.status));e.status=r.status;throw e}return j;
   }
-  async function load(){var j=await call('/links');links=j.links||{};try{var m=await call('/mine',{secret:secret});mine=m.links||{}}catch(e){mine={}}}
-  async function setKey(k){secret=k;try{localStorage.setItem(KEY,k)}catch(e){}me=await sha(k)}
+  async function load(fresh){var j=await call(fresh?'/links?fresh=1':'/links');links=j.links||{};try{var m=await call('/mine',{secret:secret});mine=m.links||{}}catch(e){mine={}}}
+  async function setKey(k){secret=k;try{localStorage.setItem(KEY,k)}catch(e){}me=await sha(k);$('kshow').value=k}
 
   $('alias').addEventListener('input',function(){
     clearTimeout(timer);var a=$('alias').value.trim().toLowerCase();
     if(!a){setHint($('ahint'),'');return}
     if(!RE.test(a)||RESERVED.indexOf(a)>-1){setHint($('ahint'),'3–32 chars: letters, numbers, - and _ (start with a letter or number).','bad');return}
     timer=setTimeout(async function(){
-      try{await load()}catch(e){}
       var t=!!links[a];setHint($('ahint'),t?'✗ Already taken – try another.':'✓ Available',t?'bad':'ok');
     },350);
   });
@@ -122,7 +125,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
     try{
       var j=await call('/create',{url:url,alias:a,secret:secret});
       $('rlink').value=linkFor(j.alias);$('result').style.display='block';setHint($('msg'),'Created ✓ – works everywhere now.','ok');
-      $('url').value='';$('alias').value='';setHint($('ahint'),'');await load();render();
+      $('url').value='';$('alias').value='';setHint($('ahint'),'');await load(true);render();
     }catch(e){setHint($('msg'),e.message,'bad');if(e.status===409)setHint($('ahint'),'✗ Already taken','bad')}
     btn.disabled=false;
   });
@@ -154,7 +157,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
           if(!validUrl(draft.url))return bad('Enter a valid http(s) URL.');
           if(!RE.test(draft.alias)||RESERVED.indexOf(draft.alias)>-1)return bad('Alias: 3–32 chars, letters, numbers, - and _.');
           sv.disabled=true;
-          try{await call('/edit',{alias:d.alias,newAlias:draft.alias,url:draft.url,secret:secret});editing=null;await load();render()}
+          try{await call('/edit',{alias:d.alias,newAlias:draft.alias,url:draft.url,secret:secret});editing=null;await load(true);render()}
           catch(e){bad(e.message)}
         };
         ac.append(sv,cn);it.append(f,ac);box.appendChild(it);return;
@@ -171,10 +174,10 @@ button:disabled{opacity:.5;cursor:not-allowed}
       acts.append(c);if(d.url)acts.append(o);
       if(own){
         var ed=document.createElement('button');ed.textContent='Edit';
-        ed.onclick=function(){editing=d.alias;draft={alias:d.alias,url:d.url};render()};acts.append(ed);
+        ed.onclick=function(){if(!d.url){setHint($('msg'),'Still loading that link – try again in a moment.','bad');load(true).then(render);return}editing=d.alias;draft={alias:d.alias,url:d.url};render()};acts.append(ed);
         var x=document.createElement('button');x.textContent='Delete';x.onclick=async function(){
           if(x.dataset.sure!=='1'){x.dataset.sure='1';x.textContent='Sure?';setTimeout(function(){x.dataset.sure='';x.textContent='Delete'},2500);return}
-          try{await call('/delete',{alias:d.alias,secret:secret});await load();render()}catch(e){x.textContent='Failed'}};acts.append(x);
+          try{await call('/delete',{alias:d.alias,secret:secret});await load(true);render()}catch(e){x.textContent='Failed'}};acts.append(x);
       }
       it.append(info,acts);box.appendChild(it);
     });
@@ -182,7 +185,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
   $('search').addEventListener('input',render);
   $('only').addEventListener('change',function(){onlyMine=$('only').checked;render()});
   $('kcopy').onclick=function(){copy(secret,$('kcopy'))};
-  $('kuse').onclick=async function(){var k=prompt('Paste your saved key:');if(k&&k.trim().length>=16){await setKey(k.trim());render()}};
+  $('kuse').onclick=async function(){
+  var k=$('kin').value.trim();
+  if(k.length<16){setHint($('kmsg'),'That does not look like a saved key.','bad');return}
+  try{await setKey(k);await load(true);render();$('kin').value='';setHint($('kmsg'),'Key applied ✓ – your links now show Edit and Delete.','ok')}
+  catch(e){setHint($('kmsg'),e.message,'bad')}
+};
 
   async function go(a){
     $('app').style.display='none';$('redirect').style.display='block';
@@ -204,7 +212,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
   if(target&&RE.test(target)){go(target);return}
   var k=null;try{k=localStorage.getItem(KEY)}catch(e){}
   if(!k){var a=new Uint8Array(16);crypto.getRandomValues(a);k=Array.from(a).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
-  setKey(k).then(function(){return load()}).then(render).catch(function(){$('list').innerHTML='<div class="empty">Could not reach the server. Check config.js.</div>'});
+  setKey(k).then(function(){return load(true)}).then(render).catch(function(){$('list').innerHTML='<div class="empty">Could not reach the server. Check config.js.</div>'});
 })();
 </script>
 </body>

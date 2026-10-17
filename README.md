@@ -7,7 +7,7 @@ A free URL shortener on GitHub Pages. No sign-in. New links are saved automatica
 - **`links.json` in your repo is the database.** It's public, like the rest of the repo, but the destination URLs inside it are encrypted (AES-256-GCM) with a key only the Worker knows. Anyone reading the file sees aliases and scrambled text, not where links go.
 - **The Worker (`worker.js`) is the middleman.** It holds a GitHub token privately and makes the commits. The token never goes in the website, because anything in a public page can be copied.
 - **Create links with no account.** Alias uniqueness is checked by the Worker against the real file, so an existing alias can't be overwritten.
-- **Edit/Delete:** your browser makes a secret key. Links store only a hash of it. Only someone with the same key can edit or delete that link. Use **Copy my key** to keep ownership on another device.
+- **Edit/Delete:** your browser makes a secret key. Links store only a hash of it. Only someone with the same key can edit or delete that link. Open **🔑 My key** in the link list to copy it, and paste it there on another device (**Use key**) to keep control of your links.
 - Short links look like `https://<username>.github.io/<repo>/my-alias`.
 
 ## Files
