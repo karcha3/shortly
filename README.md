@@ -17,6 +17,8 @@ A free URL shortener on GitHub Pages. No sign-in. New links are saved automatica
 | `index.html` | The app. |
 | `404.html` | Identical copy of `index.html`. GitHub Pages serves it for `/repo/my-alias`, which makes the redirect work. |
 | `config.js` | Your Worker URL. |
+| `privacy.html`, `terms.html`, `cookies.html`, `refunds.html` | Privacy policy, terms and conditions, cookie and storage policy, and refund policy. Linked from the footer. |
+| `LICENSE` | All rights reserved. |
 | `favicon.svg`, `apple-touch-icon.png` | The site icon (browser tab and phone home screen). |
 | `links.json` | The database. Starts empty. |
 | `worker.js` | Goes on Cloudflare, not in the repo (you can still keep a copy there). |
@@ -49,4 +51,11 @@ A free URL shortener on GitHub Pages. No sign-in. New links are saved automatica
 
 ## License
 
-MIT.
+Copyright (c) 2026 karcha3. All rights reserved. This is not open-source software: you may view it and use the live site, but you may not copy, modify, host or redistribute it. See `LICENSE`.
+
+## Accessibility and privacy notes
+
+- The site uses no cookies, ads, analytics, third-party scripts, fonts or embeds, and has no images other than its own icon. Because nothing needs consent, there is no cookie banner. **If you ever add analytics, ads or embeds, add a consent banner and update the policies first.**
+- Text and form-border colors were checked against WCAG 2.1 AA contrast (4.5:1 for text, 3:1 for input and button borders) in both light and dark themes.
+- All form fields have labels, buttons have descriptive names, the create form works with the Enter key, and edit fields support Enter (save) and Escape (cancel). Test with a keyboard and a screen reader before relying on this.
+- The policies are plain-language templates written for how this site works. They are not legal advice. Have a lawyer review them if you run this commercially.

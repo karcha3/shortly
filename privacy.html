@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy – Shortly</title>
+<meta name="description" content="Privacy policy for the Shortly URL shortener.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:light dark;--bg:#f5f6fa;--text:#14161f;--muted:#5d6277;--accent:#4f46e5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1117;--text:#eceef6;--muted:#9096ad;--accent:#818cf8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main,footer{max-width:720px;margin:0 auto;padding:24px 16px}
+h1{font-size:1.7rem;margin:.4em 0 .2em}h2{font-size:1.15rem;margin:1.6em 0 .4em}
+p,li{max-width:70ch}a{color:var(--accent)}
+.meta{color:var(--muted);font-size:.9rem}
+footer{font-size:.9rem;color:var(--muted);padding-bottom:40px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--accent);color:var(--bg);padding:10px 14px;z-index:10}.skip:focus{left:0}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<main id="main">
+<p><a href="./">← Back to Shortly</a></p>
+<h1>Privacy policy</h1>
+<p class="meta">Last updated: October 18, 2026</p>
+
+<p>This policy explains what information Shortly (“the service”, “we”) handles when you use this website. Shortly is run by an individual, karcha3.</p>
+
+<h2>1. What we process</h2>
+<ul>
+<li><strong>The links you create:</strong> the destination URL, the alias (short name), and the time the link was created.</li>
+<li><strong>A hashed ownership key:</strong> your browser creates a random secret key and keeps it on your device. We store only a one-way (SHA-256) hash of it next to each link you create, so we can tell that a later edit or delete request comes from the same browser. The key itself is sent to our service with requests to load your links, or to create, edit or delete a link, and it is not stored.</li>
+<li><strong>Technical data:</strong> like any website, our hosting providers (GitHub and Cloudflare, see section 5) receive your IP address, browser type and request details when you load a page or follow a short link. Our own code does not record or store this information.</li>
+</ul>
+
+<h2>2. What we do not collect</h2>
+<p>We do not ask for or store your name, email address, password, phone number, location or payment details. We do not use advertising, analytics, tracking pixels, fingerprinting or profiling, and we do not sell data.</p>
+
+<h2>3. Public information, please read</h2>
+<ul>
+<li>Links are saved in a file (<code>links.json</code>) in a <strong>public</strong> GitHub repository. Anyone can read the aliases, creation times and hashed ownership keys.</li>
+<li>Destination URLs in that file are stored encrypted, and the website only shows you the destinations of your own links. However, <strong>anyone who knows or guesses an alias can follow it and see where it goes</strong>, because that is how a short link works.</li>
+<li>GitHub keeps the history of every change to the file. Links you delete, edit or rename can remain visible in that history, and any entries created before encryption was switched on may contain the plain URL.</li>
+<li>Therefore, <strong>do not shorten URLs that contain personal information, passwords, access tokens, or private documents.</strong></li>
+</ul>
+
+<h2>4. Why we use it</h2>
+<p>We use this information only to run the service: to redirect short links, to stop duplicate aliases, to let you edit or delete your own links, and to keep the service secure and prevent abuse. Where laws such as the EU/UK GDPR or Georgia’s Law on Personal Data Protection apply, our legal grounds are providing the service you asked for and our legitimate interest in running it securely. Because we do not use non-essential cookies or similar technologies, we do not rely on your consent.</p>
+
+<h2>5. Who else handles data</h2>
+<ul>
+<li><strong>GitHub</strong> hosts this website and the public repository that holds the link file. See the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub privacy statement</a>.</li>
+<li><strong>Cloudflare</strong> runs the small service that saves and looks up links. See the <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare privacy policy</a>.</li>
+</ul>
+<p>These providers may process data in countries other than yours. We do not share data with anyone else.</p>
+
+<h2>6. How long we keep it</h2>
+<p>Links stay until their owner deletes them or we remove them. Deleted links disappear from the current file but may remain in the public change history (see section 3). Provider logs are kept according to the providers’ own policies.</p>
+
+<h2>7. Security</h2>
+<p>Pages and requests use HTTPS. Destination URLs are encrypted in the stored file, and the encryption key and the GitHub access token are kept only in the Cloudflare service, not in this website or the repository. No system is perfectly secure, and we cannot guarantee absolute security.</p>
+
+<h2>8. Your choices and rights</h2>
+<ul>
+<li>You can delete or change your own links at any time on the site, using the browser that holds your key.</li>
+<li>If you cannot do that, contact us and we will remove a link on request, once you give us enough information to identify it (for example, the alias).</li>
+<li>Depending on where you live, you may have rights under laws such as the GDPR or Georgia’s Law on Personal Data Protection, including access, correction, erasure, restriction and objection, and the right to complain to your data protection authority (in Georgia, the Personal Data Protection Service). Because we hold only a hashed key, we may need proof of ownership before acting on a request.</li>
+</ul>
+
+<h2>9. Children</h2>
+<p>The service is not directed at children, and we do not knowingly collect personal information from them.</p>
+
+<h2>10. Changes and contact</h2>
+<p>We may update this policy and will change the date above when we do.</p>
+<p>You can contact us through the GitHub profile <a href="https://github.com/karcha3">github.com/karcha3</a>. Please do not post personal details in public issues; send a private message instead where possible.</p>
+
+</main>
+<footer>
+<nav aria-label="Legal and contact"><a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms &amp; conditions</a> · <a href="cookies.html">Cookie &amp; storage policy</a> · <a href="refunds.html">Refund policy</a> · <a href="https://github.com/karcha3/shortly/issues">Report abuse or contact</a></nav>
+<p>© 2026 karcha3. All rights reserved.</p>
+</footer>
+</body>
+</html>
